@@ -30,22 +30,41 @@ class MangaRepositoryImpl @Inject constructor(
             // Log network status for debugging
             NetworkUtils.logNetworkInfo(context)
 
+            // First, try to load from database to show cached data immediately
+            val cachedData = loadFromDatabaseDirectly(page)
+
             // Check if network is available
             val isNetworkAvailable = NetworkUtils.isNetworkAvailable(context)
             Log.d(TAG, "Network available: $isNetworkAvailable")
 
+            // If we have cached data, return it immediately while fetching fresh data in the background
+            if (cachedData.isNotEmpty()) {
+                Log.d(TAG, "Returning ${cachedData.size} cached items immediately for page $page")
+
+                // If network is available, fetch fresh data in the background
+                if (isNetworkAvailable) {
+                    Log.d(TAG, "Network available, will refresh cache in background")
+                    // This will be handled by the refresh mechanism
+                }
+
+                return Result.Success(cachedData)
+            }
+
+            // If no cached data or we need fresh data
             if (isNetworkAvailable) {
                 try {
-                    // Try to fetch from network first
+                    // Try to fetch from network
                     Log.d(TAG, "Fetching manga list from API for page $page with size $pageSize")
                     try {
                         // Log detailed request information
                         Log.d(TAG, "Making API request to: mangaApiService.getMangaList($page, $pageSize)")
 
                         val response = mangaApiService.getMangaList(page, pageSize)
-                        Log.d(TAG, "API Response: status=${response.status}, message=${response.message}, total items=${response.totalItems}")
+                        val responseWithPagination = response.withPagination(page, pageSize)
 
-                        if (response.data.isEmpty()) {
+                        Log.d(TAG, "API Response: code=${response.code}, items=${responseWithPagination.data.size}")
+
+                        if (responseWithPagination.data.isEmpty()) {
                             Log.w(TAG, "API returned empty data list despite successful response")
                         }
 
@@ -72,10 +91,9 @@ class MangaRepositoryImpl @Inject constructor(
                         Log.e(TAG, "API error details: ${apiException.javaClass.simpleName}", apiException)
 
                         // Check if we have data in the database before using mock data
-                        val dbData = loadFromDatabaseDirectly(page)
-                        if (dbData.isNotEmpty()) {
-                            Log.d(TAG, "Using ${dbData.size} items from database after API failure")
-                            return Result.Success(dbData)
+                        if (cachedData.isNotEmpty()) {
+                            Log.d(TAG, "Using ${cachedData.size} items from database after API failure")
+                            return Result.Success(cachedData)
                         }
 
                         // If API fails and no database data, try to use mock data as a fallback
@@ -320,6 +338,69 @@ class MangaRepositoryImpl @Inject constructor(
     }
 
     /**
+     * Refreshes the cache when internet connection is restored
+     * This should be called when the app detects that internet connectivity has been restored
+     */
+    override suspend fun refreshCacheIfOnline(): Result<Boolean> {
+        return try {
+            val isNetworkAvailable = NetworkUtils.isNetworkAvailable(context)
+            Log.d(TAG, "Checking if cache refresh is needed. Network available: $isNetworkAvailable")
+
+            if (!isNetworkAvailable) {
+                Log.d(TAG, "Network not available, skipping cache refresh")
+                return Result.Success(false)
+            }
+
+            Log.d(TAG, "Network available, refreshing cache")
+
+            // Get the maximum page we have in the database
+            val maxPage = mangaDao.getMaxPage() ?: 1
+            Log.d(TAG, "Maximum page in database: $maxPage")
+
+            // Refresh each page we have cached
+            for (page in 1..maxPage) {
+                try {
+                    Log.d(TAG, "Refreshing cache for page $page")
+                    val response = mangaApiService.getMangaList(page, 20) // Using default page size
+
+                    if (response.data.isNotEmpty()) {
+                        val mangaList = response.data.map { it.toManga() }
+                        val mangaEntities = mangaList.map { MangaEntity.fromManga(it, page) }
+                        mangaDao.clearAndInsertForPage(page, mangaEntities)
+                        Log.d(TAG, "Successfully refreshed cache for page $page with ${mangaEntities.size} items")
+                    } else {
+                        Log.d(TAG, "API returned empty list for page $page, skipping cache update")
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error refreshing cache for page $page: ${e.message}", e)
+                    // Continue with next page even if this one fails
+                }
+            }
+
+            // Also refresh latest manga
+            try {
+                Log.d(TAG, "Refreshing latest manga cache")
+                val latestResponse = mangaApiService.getLatestManga()
+
+                if (latestResponse.data.isNotEmpty()) {
+                    val latestMangaList = latestResponse.data.map { it.toManga() }
+                    val latestMangaEntities = latestMangaList.map { MangaEntity.fromManga(it, -1) }
+                    mangaDao.clearAndInsertForPage(-1, latestMangaEntities)
+                    Log.d(TAG, "Successfully refreshed latest manga cache with ${latestMangaEntities.size} items")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error refreshing latest manga cache: ${e.message}", e)
+                // Continue even if latest manga refresh fails
+            }
+
+            Result.Success(true)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error during cache refresh: ${e.message}", e)
+            Result.Error("Failed to refresh cache: ${e.message}")
+        }
+    }
+
+    /**
      * Creates mock manga data for testing and fallback purposes
      */
     private fun createMockMangaData(page: Int, pageSize: Int): List<Manga> {
@@ -331,13 +412,17 @@ class MangaRepositoryImpl @Inject constructor(
             Manga(
                 id = id,
                 title = "Manga Title $id",
+                subTitle = "Subtitle for Manga $id",
                 description = "This is a description for manga $id. This is mock data created as a fallback when the API is not available.",
                 coverImage = "https://via.placeholder.com/300x450.png?text=Manga+$id",
-                author = "Author $id",
+                authors = listOf("Author $id", "Co-Author ${id+1}"),
                 genres = listOf("Action", "Adventure", "Fantasy"),
                 chapters = (5..50).random(),
                 status = if (id % 3 == 0) "Completed" else "Ongoing",
-                rating = 4.5f
+                nsfw = false,
+                type = "japan",
+                createdAt = "2023-01-${id % 30 + 1}",
+                updatedAt = "2023-05-${id % 30 + 1}"
             )
         }.also {
             Log.d(TAG, "Created ${it.size} mock manga items")
@@ -367,13 +452,17 @@ class MangaRepositoryImpl @Inject constructor(
             Manga(
                 id = id,
                 title = popularTitles[index],
+                subTitle = "The Amazing ${popularTitles[index]}",
                 description = "This is a popular manga series. This is mock data created as a fallback when the API is not available.",
                 coverImage = "https://via.placeholder.com/300x450.png?text=${popularTitles[index].replace(" ", "+")}",
-                author = "Famous Author $index",
+                authors = listOf("Famous Author $index", "Co-Author ${index+1}"),
                 genres = listOf("Action", "Adventure", "Fantasy"),
                 chapters = (100..300).random(),
                 status = if (index % 3 == 0) "Completed" else "Ongoing",
-                rating = 4.8f
+                nsfw = false,
+                type = "japan",
+                createdAt = "2023-01-${index % 30 + 1}",
+                updatedAt = "2023-06-${index % 30 + 1}"
             )
         }.also {
             Log.d(TAG, "Created ${it.size} mock latest manga items")

@@ -36,10 +36,15 @@ class HomeViewModel @Inject constructor(
 
     private val TAG = "HomeViewModel"
 
+    // Track network state to detect when connectivity is restored
+    private var wasNetworkAvailable = false
+
     init {
         // Load cached data first, then refresh from network
         loadCachedData()
-        // We'll load from network after cached data is loaded
+
+        // Start monitoring network connectivity
+        monitorNetworkConnectivity()
     }
 
     private fun loadCachedData() {
@@ -126,7 +131,43 @@ class HomeViewModel @Inject constructor(
         Log.d(TAG, "Refreshing manga list - resetting to page 1")
         currentPage = 1
         isLastPage = false
-        loadMangaList()
+
+        // First check if we need to refresh the cache
+        val isNetworkAvailable = NetworkUtils.isNetworkAvailable(context)
+        if (isNetworkAvailable) {
+            // If network is available, refresh the cache first
+            viewModelScope.launch {
+                try {
+                    Log.d(TAG, "Network available, refreshing cache before loading UI")
+                    val refreshResult = mangaRepository.refreshCacheIfOnline()
+
+                    when (refreshResult) {
+                        is Result.Success -> {
+                            if (refreshResult.data) {
+                                Log.d(TAG, "Cache refresh successful, now loading UI")
+                            } else {
+                                Log.d(TAG, "Cache refresh skipped, loading UI with existing data")
+                            }
+                        }
+                        is Result.Error -> {
+                            Log.e(TAG, "Error refreshing cache: ${refreshResult.message}")
+                        }
+                        else -> {}
+                    }
+
+                    // Load the UI with the latest data (whether refresh succeeded or not)
+                    loadMangaList()
+                } catch (e: Exception) {
+                    Log.e(TAG, "Exception during cache refresh: ${e.message}")
+                    // If refresh fails, still try to load the UI
+                    loadMangaList()
+                }
+            }
+        } else {
+            // If network is not available, just load from cache
+            Log.d(TAG, "Network not available, loading from cache only")
+            loadMangaList()
+        }
     }
 
     // Add a function to log detailed diagnostic information
@@ -158,6 +199,64 @@ class HomeViewModel @Inject constructor(
     fun inspectDatabase() {
         Log.d(TAG, "Inspecting database...")
         databaseInspector.inspectMangaDatabase()
+    }
+
+    /**
+     * Monitors network connectivity and refreshes the cache when internet is restored
+     */
+    private fun monitorNetworkConnectivity() {
+        viewModelScope.launch {
+            // Check network status periodically
+            while (true) {
+                try {
+                    val isNetworkAvailable = NetworkUtils.isNetworkAvailable(context)
+
+                    // If network was previously unavailable but is now available, refresh the cache
+                    if (!wasNetworkAvailable && isNetworkAvailable) {
+                        Log.d(TAG, "Network connectivity restored, refreshing cache")
+                        refreshCacheInBackground()
+                    }
+
+                    // Update the previous network state
+                    wasNetworkAvailable = isNetworkAvailable
+
+                    // Wait before checking again (every 10 seconds)
+                    kotlinx.coroutines.delay(10000)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error monitoring network connectivity: ${e.message}")
+                    // Wait before trying again
+                    kotlinx.coroutines.delay(30000)
+                }
+            }
+        }
+    }
+
+    /**
+     * Refreshes the cache in the background without updating the UI
+     */
+    private fun refreshCacheInBackground() {
+        viewModelScope.launch {
+            try {
+                Log.d(TAG, "Starting background cache refresh")
+                val result = mangaRepository.refreshCacheIfOnline()
+
+                when (result) {
+                    is Result.Success -> {
+                        if (result.data) {
+                            Log.d(TAG, "Background cache refresh completed successfully")
+                        } else {
+                            Log.d(TAG, "Background cache refresh skipped (network unavailable)")
+                        }
+                    }
+                    is Result.Error -> {
+                        Log.e(TAG, "Error during background cache refresh: ${result.message}")
+                    }
+                    else -> {}
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Exception during background cache refresh: ${e.message}")
+            }
+        }
     }
 }
 

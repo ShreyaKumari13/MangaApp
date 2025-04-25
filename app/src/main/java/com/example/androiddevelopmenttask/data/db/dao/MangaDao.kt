@@ -12,25 +12,25 @@ import kotlinx.coroutines.flow.Flow
 interface MangaDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMangas(mangas: List<MangaEntity>)
-    
+
     @Query("SELECT * FROM mangas WHERE id = :id LIMIT 1")
     suspend fun getMangaById(id: Int): MangaEntity?
-    
+
     @Query("SELECT * FROM mangas ORDER BY id ASC")
     fun getAllMangas(): Flow<List<MangaEntity>>
-    
+
     @Query("SELECT * FROM mangas WHERE page = :page ORDER BY id ASC")
     fun getMangasByPage(page: Int): Flow<List<MangaEntity>>
-    
-    @Query("SELECT * FROM mangas WHERE title LIKE '%' || :query || '%' OR author LIKE '%' || :query || '%'")
+
+    @Query("SELECT * FROM mangas WHERE title LIKE '%' || :query || '%'")
     suspend fun searchMangas(query: String): List<MangaEntity>
-    
+
     @Query("DELETE FROM mangas WHERE page = :page")
     suspend fun deleteMangasByPage(page: Int)
-    
+
     @Query("SELECT MAX(page) FROM mangas")
     suspend fun getMaxPage(): Int?
-    
+
     @Transaction
     suspend fun clearAndInsertForPage(page: Int, mangas: List<MangaEntity>) {
         deleteMangasByPage(page)

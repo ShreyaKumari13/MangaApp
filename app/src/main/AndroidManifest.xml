@@ -33,6 +33,32 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".ui.test.TestLauncherActivity"
+            android:exported="true"
+            android:theme="@style/Theme.AndroidDevelopmentTask">
+        </activity>
+
+        <activity
+            android:name=".ApiTestActivity"
+            android:exported="true"
+            android:theme="@style/Theme.AndroidDevelopmentTask">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".ui.test.MangaVerseApiTestActivity"
+            android:exported="true"
+            android:theme="@style/Theme.AndroidDevelopmentTask">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

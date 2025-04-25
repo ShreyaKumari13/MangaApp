@@ -30,7 +30,10 @@ object AppModule {
             context,
             AppDatabase::class.java,
             "zenithtra_database"
-        ).build()
+        )
+        .addMigrations(AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3)
+        .fallbackToDestructiveMigration() // This will recreate the database if migration fails
+        .build()
     }
 
     @Provides

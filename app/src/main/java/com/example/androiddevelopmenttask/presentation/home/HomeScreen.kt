@@ -135,15 +135,16 @@ fun HomeScreen(
                                 // Log diagnostic information
                                 viewModel.logDiagnosticInfo()
 
-                                scope.launch {
-                                    snackbarHostState.showSnackbar(
-                                        "Running diagnostics - check logs"
-                                    )
-                                }
+                                // Launch API test activity
+                                val intent = android.content.Intent(
+                                    navController.context,
+                                    com.example.androiddevelopmenttask.ApiTestActivity::class.java
+                                )
+                                navController.context.startActivity(intent)
                             },
                             modifier = Modifier.padding(start = 8.dp)
                         ) {
-                            Text("API")
+                            Text("Test API")
                         }
                     }
 

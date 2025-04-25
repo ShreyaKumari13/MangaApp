@@ -9,7 +9,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import com.example.androiddevelopmenttask.presentation.common.navigation.Navigation
-import com.example.androiddevelopmenttask.presentation.common.theme.ZenithraTheme
+import com.example.androiddevelopmenttask.presentation.common.theme.AndroidDevelopmentTaskTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -17,7 +17,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            ZenithraTheme {
+            AndroidDevelopmentTaskTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background

@@ -13,4 +13,10 @@ interface MangaRepository {
     suspend fun getChapters(mangaId: Int): Result<List<ChapterDto>>
     suspend fun getChapterImages(mangaId: Int, chapterNumber: String): Result<List<String>>
     fun getLocalMangaList(): Flow<List<Manga>>
+
+    /**
+     * Refreshes the cache when internet connection is restored
+     * @return Result containing a Boolean indicating success or failure
+     */
+    suspend fun refreshCacheIfOnline(): Result<Boolean>
 }

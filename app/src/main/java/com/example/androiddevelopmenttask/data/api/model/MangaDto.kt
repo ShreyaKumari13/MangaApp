@@ -5,49 +5,63 @@ import com.google.gson.annotations.SerializedName
 
 data class MangaDto(
     @SerializedName("id")
-    val id: Int,
+    val idString: String = "",
 
     @SerializedName("title")
-    val title: String,
+    val title: String = "",
 
-    @SerializedName("description")
-    val description: String = "", // Some manga might not have descriptions
-
-    @SerializedName("cover_image")
-    val coverImage: String = "", // Default empty string if no image
-
-    @SerializedName("author")
-    val author: String = "Unknown", // Default author if not provided
-
-    @SerializedName("genres")
-    val genres: List<String> = emptyList(),
-
-    @SerializedName("chapters")
-    val chapters: Int = 0,
+    @SerializedName("sub_title")
+    val subTitle: String = "",
 
     @SerializedName("status")
     val status: String = "",
 
-    @SerializedName("rating")
-    val rating: Float = 0f,
+    @SerializedName("thumb")
+    val coverImage: String = "",
 
-    @SerializedName("published")
-    val published: String = "",
+    @SerializedName("summary")
+    val description: String = "",
 
-    @SerializedName("popularity")
-    val popularity: Int = 0
+    @SerializedName("authors")
+    val authors: List<String> = emptyList(),
+
+    @SerializedName("genres")
+    val genres: List<String> = emptyList(),
+
+    @SerializedName("nsfw")
+    val nsfw: Boolean = false,
+
+    @SerializedName("type")
+    val type: String = "",
+
+    @SerializedName("total_chapter")
+    val chapters: Int = 0,
+
+    @SerializedName("create_at")
+    val createdAt: Long = 0,
+
+    @SerializedName("update_at")
+    val updatedAt: Long = 0
 ) {
+    // Generate a numeric ID from the string ID for database compatibility
+    val id: Int
+        get() = idString.hashCode()
+
     fun toManga(): Manga {
         return Manga(
             id = id,
-            title = title,
+            title = title.trim(),
+            subTitle = subTitle,
             description = description,
             coverImage = coverImage,
-            author = author,
+            authors = authors,
             genres = genres,
             chapters = chapters,
             status = status,
-            rating = rating
+            nsfw = nsfw,
+            type = type,
+            createdAt = createdAt.toString(),
+            updatedAt = updatedAt.toString()
         )
     }
 }

@@ -1,52 +1,28 @@
 package com.example.androiddevelopmenttask.presentation.auth
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.*
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-// import com.example.androiddevelopmenttask.R
-import com.example.androiddevelopmenttask.presentation.common.components.ZenithraButton
-import com.example.androiddevelopmenttask.presentation.common.components.ZenithraTextField
+import com.example.androiddevelopmenttask.R
 import com.example.androiddevelopmenttask.presentation.common.navigation.Screen
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
     navController: NavController,
@@ -55,7 +31,7 @@ fun LoginScreen(
     val email by viewModel.email.collectAsState()
     val password by viewModel.password.collectAsState()
     val loginState by viewModel.loginState.collectAsState()
-
+    var passwordVisible by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(loginState) {
@@ -74,158 +50,245 @@ fun LoginScreen(
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = Color.Black
     ) { paddingValues ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
                 .padding(paddingValues)
+                .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+            Spacer(modifier = Modifier.height(40.dp))
+
+            // App name
+            Text(
+                text = "Zenithtra",
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    fontSize = 24.sp
+                )
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Welcome back text
+            Text(
+                text = "Welcome back",
+                style = MaterialTheme.typography.headlineLarge.copy(
+                    color = Color.White,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // Please enter details text
+            Text(
+                text = "Please enter your details to sign in",
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    color = Color.White.copy(alpha = 0.7f),
+                    fontSize = 14.sp
+                )
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Social login buttons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "Zenithtra",
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Bold
+                // Google button
+                Button(
+                    onClick = { /* Handle Google login */ },
+                    modifier = Modifier
+                        .size(48.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.White.copy(alpha = 0.1f),
+                        contentColor = Color.White
                     ),
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = "Welcome back",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
+                    shape = CircleShape,
+                    contentPadding = PaddingValues(8.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clip(CircleShape)
-                            .background(Color.White)
-                            .padding(12.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Email,
-                            contentDescription = "Email",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.size(16.dp))
-
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary)
-                            .padding(12.dp)
-                    ) {
-                        // Temporarily commented out due to R class issues
-                        // Image(
-                        //     painter = painterResource(id = R.drawable.ic_google),
-                        //     contentDescription = "Google",
-                        //     modifier = Modifier.size(24.dp)
-                        // )
-                        Icon(
-                            imageVector = Icons.Default.Email,
-                            contentDescription = "Google",
-                            tint = Color.White,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_google),
+                        contentDescription = "Google login",
+                        tint = Color.White
+                    )
                 }
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.width(16.dp))
 
-                ZenithraTextField(
-                    value = email,
-                    onValueChange = viewModel::onEmailChanged,
-                    label = "Your Email Address",
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Email,
-                        imeAction = ImeAction.Next
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                ZenithraTextField(
-                    value = password,
-                    onValueChange = viewModel::onPasswordChanged,
-                    label = "Password",
-                    isPassword = true,
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Password,
-                        imeAction = ImeAction.Done
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = "Forgot password?",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    textAlign = TextAlign.End,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                ZenithraButton(
-                    text = "Sign In",
-                    onClick = { viewModel.login() },
-                    enabled = email.isNotBlank() && password.isNotBlank() && loginState !is LoginState.Loading
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
+                // Apple button
+                Button(
+                    onClick = { /* Handle Apple login */ },
+                    modifier = Modifier
+                        .size(48.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.White.copy(alpha = 0.1f),
+                        contentColor = Color.White
+                    ),
+                    shape = CircleShape,
+                    contentPadding = PaddingValues(8.dp)
                 ) {
-                    Text(
-                        text = "Don't have an account?",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_apple),
+                        contentDescription = "Apple login",
+                        tint = Color.White
                     )
-
-                    TextButton(onClick = { navController.navigate(Screen.Register.route) }) {
-                        Text(
-                            text = "Sign up",
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                fontWeight = FontWeight.Bold
-                            ),
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
                 }
             }
 
-            if (loginState is LoginState.Loading) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.5f)),
-                    contentAlignment = Alignment.Center
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // OR text
+            Text(
+                text = "OR",
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    color = Color.White.copy(alpha = 0.5f)
+                ),
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Email field
+            OutlinedTextField(
+                value = email,
+                onValueChange = viewModel::onEmailChanged,
+                placeholder = { Text("Your Email Address", color = Color.White.copy(alpha = 0.5f)) },
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedContainerColor = Color.DarkGray.copy(alpha = 0.3f),
+                    focusedContainerColor = Color.DarkGray.copy(alpha = 0.3f),
+                    unfocusedBorderColor = Color.Transparent,
+                    focusedBorderColor = Color.Transparent,
+                    unfocusedTextColor = Color.White,
+                    focusedTextColor = Color.White
+                ),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
+                    imeAction = ImeAction.Next
+                ),
+                shape = RoundedCornerShape(4.dp),
+                singleLine = true
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Password field
+            OutlinedTextField(
+                value = password,
+                onValueChange = viewModel::onPasswordChanged,
+                placeholder = { Text("Password", color = Color.White.copy(alpha = 0.5f)) },
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedContainerColor = Color.DarkGray.copy(alpha = 0.3f),
+                    focusedContainerColor = Color.DarkGray.copy(alpha = 0.3f),
+                    unfocusedBorderColor = Color.Transparent,
+                    focusedBorderColor = Color.Transparent,
+                    unfocusedTextColor = Color.White,
+                    focusedTextColor = Color.White
+                ),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Done
+                ),
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                        Icon(
+                            painter = if (passwordVisible)
+                                painterResource(id = R.drawable.ic_visibility_off)
+                            else
+                                painterResource(id = R.drawable.ic_visibility),
+                            contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                            tint = Color.White.copy(alpha = 0.5f)
+                        )
+                    }
+                },
+                shape = RoundedCornerShape(4.dp),
+                singleLine = true
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Forgot password
+            Box(modifier = Modifier.fillMaxWidth()) {
+                TextButton(
+                    onClick = { /* Handle forgot password */ },
+                    modifier = Modifier.align(Alignment.CenterEnd)
                 ) {
-                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                    Text(
+                        text = "Forgot password?",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = Color.White.copy(alpha = 0.5f),
+                            fontSize = 12.sp
+                        )
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Sign in button
+            Button(
+                onClick = { viewModel.login() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Gray.copy(alpha = 0.3f),
+                    contentColor = Color.White,
+                    disabledContainerColor = Color.Gray.copy(alpha = 0.2f)
+                ),
+                enabled = email.isNotBlank() && password.isNotBlank() && loginState !is LoginState.Loading,
+                shape = RoundedCornerShape(24.dp)
+            ) {
+                if (loginState is LoginState.Loading) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(
+                        "Sign In",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Sign up text
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Don't have an account? ",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = Color.White.copy(alpha = 0.7f),
+                        fontSize = 14.sp
+                    )
+                )
+                TextButton(onClick = { navController.navigate(Screen.Register.route) }) {
+                    Text(
+                        text = "Sign Up",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp
+                        )
+                    )
                 }
             }
         }

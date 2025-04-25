@@ -1,44 +1,73 @@
 package com.example.androiddevelopmenttask.presentation.common.theme
 
+import android.app.Activity
+import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 
 private val DarkColorScheme = darkColorScheme(
-    primary = DarkPrimary,
+    primary = Primary,
     secondary = DarkSecondary,
+    tertiary = Pink80,
     background = DarkBackground,
     surface = DarkSurface,
-    error = DarkError,
-    onPrimary = DarkOnPrimary,
-    onSecondary = DarkOnSecondary,
-    onBackground = DarkOnBackground,
-    onSurface = DarkOnSurface,
-    onError = DarkOnError
+    onPrimary = TextPrimary,
+    onSecondary = TextPrimary,
+    onTertiary = TextPrimary,
+    onBackground = TextPrimary,
+    onSurface = TextPrimary,
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = LightPrimary,
-    secondary = LightSecondary,
-    background = LightBackground,
-    surface = LightSurface,
-    error = LightError,
-    onPrimary = LightOnPrimary,
-    onSecondary = LightOnSecondary,
-    onBackground = LightOnBackground,
-    onSurface = LightOnSurface,
-    onError = LightOnError
+    primary = Primary,
+    secondary = PurpleGrey40,
+    tertiary = Pink40,
+    background = DarkBackground,
+    surface = DarkSurface,
+    onPrimary = TextPrimary,
+    onSecondary = TextPrimary,
+    onTertiary = TextPrimary,
+    onBackground = TextPrimary,
+    onSurface = TextPrimary,
 )
 
 @Composable
-fun ZenithraTheme(
-    // darkTheme parameter removed as it's not used
+fun AndroidDevelopmentTaskTheme(
+    darkTheme: Boolean = true, // Force dark theme
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    // Always use dark theme as per design
-    val colorScheme = DarkColorScheme
+    val colorScheme = when {
+        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+            val context = LocalContext.current
+            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+        }
+        darkTheme -> DarkColorScheme
+        else -> LightColorScheme
+    }
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context as Activity).window
+            WindowCompat.setDecorFitsSystemWindows(window, false)
+            window.statusBarColor = Color.Transparent.toArgb()
+            WindowCompat.getInsetsController(window, view).apply {
+                isAppearanceLightStatusBars = !darkTheme
+                isAppearanceLightNavigationBars = !darkTheme
+            }
+        }
+    }
 
     MaterialTheme(
         colorScheme = colorScheme,

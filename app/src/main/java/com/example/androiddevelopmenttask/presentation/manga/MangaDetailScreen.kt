@@ -172,7 +172,7 @@ fun MangaDetailScreen(
                                 Spacer(modifier = Modifier.height(8.dp))
 
                                 Text(
-                                    text = "From ${manga.author}",
+                                    text = "From ${manga.authors.joinToString(", ")}",
                                     style = MaterialTheme.typography.bodyMedium.copy(
                                         color = Color.White.copy(alpha = 0.7f)
                                     )
@@ -189,25 +189,15 @@ fun MangaDetailScreen(
 
                                 Spacer(modifier = Modifier.height(4.dp))
 
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Star,
-                                        contentDescription = "Rating",
-                                        tint = Color.Yellow,
-                                        modifier = Modifier.size(16.dp)
+                                Text(
+                                    text = manga.status,
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        color = if (manga.status == "Ongoing") 
+                                            Color.Green.copy(alpha = 0.7f)
+                                        else 
+                                            Color.White.copy(alpha = 0.7f)
                                     )
-
-                                    Spacer(modifier = Modifier.width(4.dp))
-
-                                    Text(
-                                        text = manga.rating.toString(),
-                                        style = MaterialTheme.typography.bodyMedium.copy(
-                                            color = Color.White
-                                        )
-                                    )
-                                }
+                                )
                             }
                         }
 
